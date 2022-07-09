@@ -354,7 +354,7 @@ if __name__ == "__main__":
     checkpoint_iter = 10000  # 4000
     loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
                                 '{}_checkpoint.tar'.format(checkpoint_iter))
-    print(loadFilename)
+    print("load checkpoint from: ", loadFilename)
 
     # Load model if a loadFilename is provided
     if loadFilename:
