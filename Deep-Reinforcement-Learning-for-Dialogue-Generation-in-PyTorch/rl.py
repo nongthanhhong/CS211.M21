@@ -312,12 +312,13 @@ if __name__ == "__main__":
     USE_CUDA = torch.cuda.is_available()
     device = torch.device("cuda" if USE_CUDA else "cpu")
 
+    MAIN_PATH = "/content/drive/MyDrive/CS_project/CS211.M21/final_project"  
     corpus_name = "train"
-    corpus = os.path.join("data", corpus_name)
+    corpus = os.path.join(MAIN_PATH, "data", corpus_name)
     datafile = os.path.join(corpus, "formatted_dialogues_train.txt")
 
     # Load/Assemble voc and pairs
-    save_dir = os.path.join("data", "save")
+    save_dir = os.path.join(MAIN_PATH, "checkpoint")
     voc, pairs = load_prepare_data(corpus, corpus_name, datafile, save_dir)
     # Print some pairs to validate
     print("\npairs:")
@@ -480,7 +481,7 @@ if __name__ == "__main__":
             if isinstance(v, torch.Tensor):
                 state[k] = v.cuda()
 
-    LOG_DIR = os.path.join("/content/drive/MyDrive/CS_project/CS211.M21/final_project/checkpoint","Logging",
+    LOG_DIR = os.path.join(MAIN_PATH, "checkpoint","Logging",
                             '{}_{}_Scaled'.format(model_name,"Daily_dialog"))
     summary_writer = SummaryWriter(LOG_DIR)
                 
