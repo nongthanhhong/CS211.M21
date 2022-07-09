@@ -14,6 +14,7 @@ import itertools
 import math
 import numpy as np
 from scipy.spatial import distance
+from torch.utils.tensorboard import SummaryWriter
 
 from loss import mask_nll_loss
 from seq2seq import *
@@ -231,7 +232,7 @@ def calculate_rewards(input_var, lengths, target_var, mask, max_target_len, forw
     return np.mean(ep_rewards) if len(ep_rewards) > 0 else 0 
 
 
-def training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir):
+def training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir, summary_writer):
 
     dull_responses = ["i do not know what you are talking about.", "i do not know.", "you do not know.", "you know what i mean.", "i know what you mean.", "you know what i am saying.", "you do not know anything."]
 
@@ -282,6 +283,7 @@ def training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forwar
             print_loss_avg = print_loss / print_every
             print("Iteration: {}; Percent complete: {:.1f}%; Average loss: {:.4f}".format(iteration, iteration / n_iteration * 100, print_loss_avg))
             print_loss = 0
+            summary_writer.add_scalar('AvgLoss', print_loss_avg, global_step=iteration)
             
         #SAVE CHECKPOINT TO DO
         if (iteration % save_every == 0):
@@ -477,7 +479,11 @@ if __name__ == "__main__":
         for k, v in state.items():
             if isinstance(v, torch.Tensor):
                 state[k] = v.cuda()
+
+    LOG_DIR = os.path.join("/content/drive/MyDrive/CS_project/CS211.M21/final_project/checkpoint","Logging",
+                            '{}_{}_Scaled'.format(model_name,"Daily_dialog"))
+    summary_writer = SummaryWriter(LOG_DIR)
                 
     # Run training iterations
     print("Starting Training!")
-    training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir)
+    training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir, summary_writer)
