@@ -352,9 +352,9 @@ if __name__ == "__main__":
     # Set checkpoint to load from; set to None if starting from scratch
     loadFilename = None
     checkpoint_iter = 10000  # 4000
-    loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
-                                '{}_checkpoint.tar'.format(checkpoint_iter))
-    print("load checkpoint from: ", loadFilename)
+    # loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
+    #                             '{}_checkpoint.tar'.format(checkpoint_iter))
+    # print("load checkpoint from: ", loadFilename)
 
     # Load model if a loadFilename is provided
     if loadFilename:
