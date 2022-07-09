@@ -83,17 +83,18 @@ def create_formatted_dataset(source, target, type=None):
 
 
 if __name__ == "__main__":
+    MAIN_PATH = "/content/drive/MyDrive/CS_project/CS211.M21/final_project"  
     create_formatted_dataset(
-        source="data/train/dialogues_train.txt",
-        target="data/train/formatted_dialogues_train.txt",
+        source=os.path.join(MAIN_PATH, "data/train/dialogues_train.txt"),
+        target=os.path.join(MAIN_PATH, "data/train/formatted_dialogues_train.txt"),
     )
 
     create_formatted_dataset(
-        source="data/validation/dialogues_validation.txt",
-        target="data/validation/formatted_dialogues_validation.txt",
+        source=os.path.join(MAIN_PATH, "data/validation/dialogues_validation.txt"),
+        target=os.path.join(MAIN_PATH, "data/validation/formatted_dialogues_validation.txt"),
     )
 
     create_formatted_dataset(
-        source="data/test/dialogues_test.txt",
-        target="data/test/formatted_dialogues_test.txt",
+        source=os.path.join(MAIN_PATH, "data/test/dialogues_test.txt"),
+        target=os.path.join(MAIN_PATH, "data/test/formatted_dialogues_test.txt"),
     )
