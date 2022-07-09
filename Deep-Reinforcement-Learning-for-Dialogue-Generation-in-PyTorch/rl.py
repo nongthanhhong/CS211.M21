@@ -440,7 +440,7 @@ if __name__ == "__main__":
     #Configure RL model
 
     model_name='RL_model_seq'
-    n_iteration = 10000
+    n_iteration = 100000
     print_every=100
     save_every=500
     learning_rate = 0.0001
