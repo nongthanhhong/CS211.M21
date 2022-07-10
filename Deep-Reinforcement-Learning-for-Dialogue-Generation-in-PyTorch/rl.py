@@ -339,7 +339,7 @@ if __name__ == "__main__":
     print("max_target_len:", max_target_len)
 
     # Configure models
-    model_name = 'cb_model'
+    model_name = 'RL_model_seq'
     attn_model = 'dot'
     # attn_model = 'general'
     # attn_model = 'concat'
@@ -361,6 +361,12 @@ if __name__ == "__main__":
         # If loading on same machine the model was trained on
         if USE_CUDA:
             checkpoint = torch.load(loadFilename)
+            encoder_sd = checkpoint['en']
+            decoder_sd = checkpoint['de']
+            encoder_optimizer_sd = checkpoint['en_opt']
+            decoder_optimizer_sd = checkpoint['de_opt']
+            embedding_sd = checkpoint['embedding']
+            voc.__dict__ = checkpoint['voc_dict']
         # If loading a model trained on GPU to CPU
         else:
             checkpoint = torch.load(loadFilename, map_location=torch.device('cpu'))
