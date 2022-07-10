@@ -232,7 +232,7 @@ def calculate_rewards(input_var, lengths, target_var, mask, max_target_len, forw
     return np.mean(ep_rewards) if len(ep_rewards) > 0 else 0 
 
 
-def training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir, summary_writer):
+def training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir, summary_writer, checkpoint_iter):
 
     dull_responses = ["i do not know what you are talking about.", "i do not know.", "you do not know.", "you know what i mean.", "i know what you mean.", "you know what i am saying.", "you do not know anything."]
 
@@ -242,7 +242,7 @@ def training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forwar
     
     # Initializations
     print('Initializing ...')
-    start_iteration = 1
+    start_iteration = checkpoint_iter
     print_loss = 0
     
     
@@ -339,7 +339,16 @@ if __name__ == "__main__":
     print("max_target_len:", max_target_len)
 
     # Configure models
-    model_name = 'RL_model_seq'
+    # Configure training/optimization
+    clip = 50.0
+    #Configure RL model
+    model_name='RL_model_seq'
+    n_iteration = 100000
+    print_every=100
+    save_every=500
+    learning_rate = 0.0001
+    decoder_learning_ratio = 5.0
+    teacher_forcing_ratio = 0.5
     attn_model = 'dot'
     # attn_model = 'general'
     # attn_model = 'concat'
@@ -351,31 +360,22 @@ if __name__ == "__main__":
 
     # Set checkpoint to load from; set to None if starting from scratch
     loadFilename = None
-    checkpoint_iter = 10000  # 4000
-    # loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
-    #                             '{}_checkpoint.tar'.format(checkpoint_iter))
-    # print("load checkpoint from: ", loadFilename)
+    checkpoint_iter = 14000  # 4000
+    loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
+                                '{}_checkpoint.tar'.format(checkpoint_iter))
+    print("load checkpoint from: ", loadFilename)
 
     # Load model if a loadFilename is provided
     if loadFilename:
         # If loading on same machine the model was trained on
-        if USE_CUDA:
-            checkpoint = torch.load(loadFilename)
-            encoder_sd = checkpoint['en']
-            decoder_sd = checkpoint['de']
-            encoder_optimizer_sd = checkpoint['en_opt']
-            decoder_optimizer_sd = checkpoint['de_opt']
-            embedding_sd = checkpoint['embedding']
-            voc.__dict__ = checkpoint['voc_dict']
-        # If loading a model trained on GPU to CPU
-        else:
-            checkpoint = torch.load(loadFilename, map_location=torch.device('cpu'))
-            encoder_sd = checkpoint['en']
-            decoder_sd = checkpoint['de']
-            encoder_optimizer_sd = checkpoint['en_opt']
-            decoder_optimizer_sd = checkpoint['de_opt']
-            embedding_sd = checkpoint['embedding']
-            voc.__dict__ = checkpoint['voc_dict']
+        checkpoint = torch.load(loadFilename, map_location=torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu'))
+        encoder_sd = checkpoint['en']
+        decoder_sd = checkpoint['de']
+        encoder_optimizer_sd = checkpoint['en_opt']
+        decoder_optimizer_sd = checkpoint['de_opt']
+        embedding_sd = checkpoint['embedding']
+        voc_dict = checkpoint['voc_dict']
 
     print('Building encoder and decoder ...')
     # Initialize word embeddings
@@ -393,15 +393,6 @@ if __name__ == "__main__":
     encoder = encoder.to(device)
     decoder = decoder.to(device)
     print('Models built and ready to go!')
-
-    # Configure training/optimization
-    clip = 50.0
-    teacher_forcing_ratio = 1.0
-    learning_rate = 0.0001
-    decoder_learning_ratio = 5.0
-    n_iteration = 1000  # 4000
-    print_every = 1
-    save_every = 1000
 
     # Ensure dropout layers are in train mode
     encoder.train()
@@ -441,17 +432,6 @@ if __name__ == "__main__":
         attn_model, embedding, hidden_size, voc.num_words, decoder_n_layers, dropout)
     backward_encoder = backward_encoder.to(device)
     backward_decoder = backward_decoder.to(device)
-
-
-    #Configure RL model
-
-    model_name='RL_model_seq'
-    n_iteration = 100000
-    print_every=100
-    save_every=500
-    learning_rate = 0.0001
-    decoder_learning_ratio = 5.0
-    teacher_forcing_ratio = 0.5
 
     # Ensure dropout layers are in train mode
     forward_encoder.train()
@@ -494,4 +474,4 @@ if __name__ == "__main__":
                 
     # Run training iterations
     print("Starting Training!")
-    training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir, summary_writer)
+    training_rl_loop(model_name, voc, pairs, batch_size, forward_encoder, forward_encoder_optimizer, forward_decoder, forward_decoder_optimizer, backward_encoder, backward_encoder_optimizer, backward_decoder, backward_decoder_optimizer,teacher_forcing_ratio,n_iteration, print_every, save_every, save_dir, summary_writer, checkpoint_iter)
