@@ -63,12 +63,13 @@ if __name__ == '__main__':
     USE_CUDA = torch.cuda.is_available()
     device = torch.device("cuda" if USE_CUDA else "cpu")
 
+    MAIN_PATH = "/content/drive/MyDrive/CS_project/CS211.M21/final_project"  
     corpus_name = "train"
-    corpus = os.path.join("data", corpus_name)
+    corpus = os.path.join(MAIN_PATH, "data", corpus_name)
     datafile = os.path.join(corpus, "formatted_dialogues_train.txt")
 
     # Load/Assemble voc and pairs
-    save_dir = os.path.join("data", "save")
+    save_dir = os.path.join(MAIN_PATH, "checkpoint")
     voc, pairs = load_prepare_data(corpus, corpus_name, datafile, save_dir)
     # Print some pairs to validate
     print("\npairs:")
@@ -146,8 +147,6 @@ if __name__ == '__main__':
     encoder = encoder.to(device)
     decoder = decoder.to(device)
     print('Models built and ready to go!')
-
-    
 
     # Ensure dropout layers are in train mode
     encoder.train()
