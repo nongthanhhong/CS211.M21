@@ -89,7 +89,16 @@ if __name__ == '__main__':
     print("max_target_len:", max_target_len)
 
     # Configure models
-    model_name = 'cb_model'
+    # Configure training/optimization
+    clip = 50.0
+    #Configure RL model
+    model_name='RL_model_seq'
+    n_iteration = 100000
+    print_every=100
+    save_every=500
+    learning_rate = 0.0001
+    decoder_learning_ratio = 5.0
+    teacher_forcing_ratio = 0.5
     attn_model = 'dot'
     # attn_model = 'general'
     # attn_model = 'concat'
@@ -100,36 +109,36 @@ if __name__ == '__main__':
     batch_size = 64
 
     # Set checkpoint to load from; set to None if starting from scratch
-    load_file_name = "data/save/cb_model/train/2-2_500/1000_checkpoint.tar"
-    checkpoint_iter = 10000  # 4000
-    # load_file_name = os.path.join(save_dir, model_name, corpus_name,
-    #                            '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, hidden_size),
-    #                            '{}_checkpoint.tar'.format(checkpoint_iter))
-    # print(load_file_name)
+    loadFilename = None
+    checkpoint_iter = 14000  # 4000
+    loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
+                                '{}_checkpoint.tar'.format(checkpoint_iter))
+    print("load checkpoint from: ", loadFilename)
 
-    # Load model if a load_file_name is provided
-    if load_file_name:
+
+    # Load model if a loadFilename is provided
+    if loadFilename:
         # If loading on same machine the model was trained on
-        #checkpoint = torch.load(load_file_name)
         # If loading a model trained on GPU to CPU
-        checkpoint = torch.load(load_file_name, map_location=torch.device('cpu'))
+        checkpoint = torch.load(loadFilename, map_location=torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu'))
         encoder_sd = checkpoint['en']
         decoder_sd = checkpoint['de']
         encoder_optimizer_sd = checkpoint['en_opt']
         decoder_optimizer_sd = checkpoint['de_opt']
         embedding_sd = checkpoint['embedding']
-        voc.__dict__ = checkpoint['voc_dict']
+        voc_dict = checkpoint['voc_dict']
 
     print('Building encoder and decoder ...')
     # Initialize word embeddings
     embedding = nn.Embedding(voc.num_words, hidden_size)
-    if load_file_name:
+    if loadFilename:
         embedding.load_state_dict(embedding_sd)
     # Initialize encoder & decoder models
     encoder = EncoderRNN(hidden_size, embedding, encoder_n_layers, dropout)
     decoder = LuongAttnDecoderRNN(
         attn_model, embedding, hidden_size, voc.num_words, decoder_n_layers, dropout)
-    if load_file_name:
+    if loadFilename:
         print("Now loading saved model state dicts")
         encoder.load_state_dict(encoder_sd)
         decoder.load_state_dict(decoder_sd)
@@ -138,14 +147,7 @@ if __name__ == '__main__':
     decoder = decoder.to(device)
     print('Models built and ready to go!')
 
-    # Configure training/optimization
-    clip = 50.0
-    teacher_forcing_ratio = 1.0
-    learning_rate = 0.0001
-    decoder_learning_ratio = 5.0
-    n_iteration = 1000  # 4000
-    print_every = 1
-    save_every = 1000
+    
 
     # Ensure dropout layers are in train mode
     encoder.train()
@@ -156,7 +158,7 @@ if __name__ == '__main__':
     encoder_optimizer = optim.Adam(encoder.parameters(), lr=learning_rate)
     decoder_optimizer = optim.Adam(
         decoder.parameters(), lr=learning_rate * decoder_learning_ratio)
-    if load_file_name:
+    if loadFilename:
         encoder_optimizer.load_state_dict(encoder_optimizer_sd)
         decoder_optimizer.load_state_dict(decoder_optimizer_sd)
 
@@ -172,14 +174,6 @@ if __name__ == '__main__':
                 if isinstance(v, torch.Tensor):
                     state[k] = v.cuda()
 
-    checkpoint = torch.load(load_file_name, map_location=torch.device(
-        'cuda') if torch.cuda.is_available() else torch.device('cpu'))
-    encoder_sd = checkpoint['en']
-    decoder_sd = checkpoint['de']
-    encoder_optimizer_sd = checkpoint['en_opt']
-    decoder_optimizer_sd = checkpoint['de_opt']
-    embedding_sd = checkpoint['embedding']
-    voc_dict = checkpoint['voc_dict']
 
     # Initialize encoder & decoder models
     encoder = EncoderRNN(hidden_size, embedding, encoder_n_layers, dropout)
