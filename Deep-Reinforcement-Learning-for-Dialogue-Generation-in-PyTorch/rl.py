@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 import csv
+import glob
 import random
 import re
 import os
@@ -360,10 +361,17 @@ if __name__ == "__main__":
 
     # Set checkpoint to load from; set to None if starting from scratch
     loadFilename = None
-    checkpoint_iter = 14000  # 4000
-    loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
-                                '{}_checkpoint.tar'.format(checkpoint_iter))
-    print("load checkpoint from: ", loadFilename)
+    checkpoint_iter = 0  # 4000
+    # loadFilename = os.path.join(save_dir,'{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),
+    #                             '{}_checkpoint.tar'.format(checkpoint_iter))
+    list_of_files = glob.glob(os.path.join(save_dir, '{}_{}-{}_{}'.format(model_name, encoder_n_layers, decoder_n_layers, hidden_size),'*')) # * means all if need specific format then *.csv
+    if list_of_files:
+        loadFilename = max(list_of_files, key=os.path.getctime)
+        print("load checkpoint from: ", loadFilename)
+        checkpoint_iter = (int)(loadFilename.split('/')[-1].split('_')[0])
+    else:
+        print("Checkpoint is empty")
+
 
     # Load model if a loadFilename is provided
     if loadFilename:
